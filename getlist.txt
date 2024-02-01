@@ -1,0 +1,99 @@
+import React, { useEffect, useState } from 'react';
+import api from '../axios/api';
+import { useHistory } from 'react-router-dom';
+
+const GetList = () => {
+  const [lists, setLists] = useState([]);
+  const [newListName, setNewListName] = useState('');
+  const history = useHistory();
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetchLists(token);
+  }, []);
+
+  const fetchLists = async (token) => {
+    try {
+      const response = await api.getlist(token); 
+      const data = await response.json();
+      //console.log(data);
+      setLists(data);
+    } catch (error) {
+      console.log('Error - here:', error.message);
+    }
+  };
+  const handleaddList = () => {
+    history.push('/addlist'); 
+  };
+  // const handleUpdate = async() => {
+  //   const token = localStorage.getItem('token');
+  //   const updateRes = await api.updatelist(token,id);
+    
+  // }
+  const updatelist = async (itemId, updatedData) => {
+    const token = localStorage.getItem('token');
+    try {
+      await api.updatelist(token, itemId, updatedData);
+      setLists((prevLists) =>
+        prevLists.map((item) => {
+          if (item.id === itemId) {
+            return { ...item, ...updatedData };
+          }
+          return item;
+        })
+      );
+    } catch (error) {
+      console.log('Error:', error.message);
+    }
+  };
+  
+  const handleDelete = async(id) => {
+    const token = localStorage.getItem('token');
+    const delResponse = await api.dellist(token,id);
+    setLists((prevLists) => prevLists.filter((item) => item.id !== id));
+    const data = await delResponse.json();
+    //console.log(data);
+  }
+  //console.log(lists);
+  return (
+  //   <div>
+  //   <button onClick={handleaddList}>Add List items</button>
+  //   <div>
+  //     <h1>List Page</h1>
+  //     {lists.map((item) => (
+  //       <div key={item.id}>
+  //         <h3>
+  //           {item.name}<button onClick={() => updatelist(item.id, updatedData)}>Update</button>
+  //            <button onClick={() => handleDelete(item.id)}>Delete</button>
+  //         </h3>
+  //       </div>
+  //     ))}
+  //   </div>
+  // </div>
+  <div>
+      <button onClick={handleaddList}>Add List items</button>
+      <div>
+        <h1>List Page</h1>
+        {lists.map((item) => (
+          <div key={item.id}>
+            <h3>
+              {item.name}
+              <button onClick={() => updatelist(item.id, newListName)}>Update</button>
+              <button onClick={() => handleDelete(item.id)}>Delete</button>
+            </h3>
+          </div>
+        ))}
+        <div>
+          <input
+            type="text"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            placeholder="Enter list name"
+          />
+          <button onClick={handleaddList}>Add New List</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default GetList;
